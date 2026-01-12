@@ -5,7 +5,18 @@
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/gabosaturno11/traveling-os)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-![Traveling OS Screenshot](./docs/screenshot.png)
+---
+
+## 🖥️ Sync Information
+
+| Location | Path |
+|----------|------|
+| **Live URL** | https://traveling-os.vercel.app |
+| **GitHub** | https://github.com/gabosaturno11/traveling-os |
+| **C2 MacBook Pro (local)** | `~/Library/Mobile Documents/com~apple~CloudDocs/Life OS /00_TRAVELING OS/TRAVELING-OS-V1/` |
+| **iCloud Sync** | Auto-syncs to all devices |
+
+> **Note:** This repo mirrors the local folder on C2 MacBook Pro (gabosaturno). Changes pushed to GitHub auto-deploy via Vercel.
 
 ---
 
@@ -63,10 +74,17 @@ traveling-os/
 ├── vercel.json         # Vercel deployment config
 ├── .gitignore          # Git ignore rules
 └── docs/
-    ├── screenshot.png  # App screenshot
-    ├── SCALING.md      # Scaling roadmap
-    ├── API.md          # Future API documentation
-    └── CHANGELOG.md    # Version history
+    ├── SCALING.md      # Scaling roadmap (V2-V4 features)
+    ├── CHANGELOG.md    # Version history
+    └── CLI-COMMANDS.sh # Deployment commands reference
+```
+
+### Local Paths (C2 MacBook Pro)
+```
+~/Library/Mobile Documents/com~apple~CloudDocs/Life OS /00_TRAVELING OS/
+├── TRAVELING-OS-V1/           # <-- THIS FOLDER (synced to GitHub)
+├── Traveling-OS-V1.zip        # Original V1 package
+└── Traveling-OS-V2.-DEPLOYMENT.zip  # V2 updates
 ```
 
 ---
@@ -186,13 +204,21 @@ See [SCALING.md](./docs/SCALING.md) for detailed technical roadmap.
 ## 🔧 Configuration
 
 ### Vercel Deployment
-The `vercel.json` is pre-configured:
+The `vercel.json` is pre-configured with security headers:
 ```json
 {
-  "name": "traveling-os",
-  "version": 2,
-  "builds": [
-    { "src": "index.html", "use": "@vercel/static" }
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
 ```
