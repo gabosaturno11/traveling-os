@@ -73,10 +73,21 @@ traveling-os/
 ├── LICENSE             # MIT License
 ├── vercel.json         # Vercel deployment config
 ├── .gitignore          # Git ignore rules
+├── scripts/
+│   ├── deploy.sh       # Quick deploy: ./scripts/deploy.sh "message"
+│   ├── open-all.sh     # Open live site + GitHub + Vercel
+│   └── status.sh       # Show git status & recent commits
 └── docs/
     ├── SCALING.md      # Scaling roadmap (V2-V4 features)
     ├── CHANGELOG.md    # Version history
     └── CLI-COMMANDS.sh # Deployment commands reference
+```
+
+### Quick Scripts
+```bash
+./scripts/deploy.sh "Your commit message"   # Deploy changes
+./scripts/status.sh                          # Check status
+./scripts/open-all.sh                        # Open all links
 ```
 
 ### Local Paths (C2 MacBook Pro)
