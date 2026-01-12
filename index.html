@@ -1,0 +1,2125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0a0c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="Traveling OS - Flight Command Center for FLL/MIA to Mérida flights">
+    <title>🪐 TRAVELING OS — Flight Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-void: #0a0a0c;
+            --bg-deep: #0f1014;
+            --bg-surface: #151519;
+            --bg-elevated: #1a1a1f;
+            --bg-hover: #222228;
+            --border-subtle: rgba(255,255,255,0.06);
+            --border-active: rgba(0,207,255,0.3);
+            --accent-primary: #00cfff;
+            --accent-glow: rgba(0,207,255,0.15);
+            --accent-success: #00ff88;
+            --accent-warning: #ffaa00;
+            --accent-danger: #ff4466;
+            --accent-purple: #a855f7;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255,255,255,0.6);
+            --text-tertiary: rgba(255,255,255,0.35);
+            --gradient-hero: linear-gradient(135deg, #0a0a0c 0%, #0f1520 50%, #0a0a0c 100%);
+            --glass-bg: rgba(20, 20, 25, 0.8);
+            --font-display: 'Sora', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --safe-area-top: env(safe-area-inset-top, 0px);
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: var(--font-display);
+            background: var(--bg-void);
+            color: var(--text-primary);
+            min-height: 100vh;
+            min-height: 100dvh;
+            line-height: 1.6;
+            overflow-x: hidden;
+            padding-top: var(--safe-area-top);
+            padding-bottom: var(--safe-area-bottom);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Noise texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Ambient glow effects */
+        .ambient-glow {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.12;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .glow-1 {
+            background: var(--accent-primary);
+            top: -150px;
+            right: -100px;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .glow-2 {
+            background: var(--accent-purple);
+            bottom: -150px;
+            left: -100px;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, 20px); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                padding: 24px;
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           HEADER - Command Center Hero
+        ═══════════════════════════════════════════════════════════════ */
+        header {
+            padding: 32px 20px;
+            margin: -16px -16px 24px -16px;
+            background: var(--gradient-hero);
+            border-bottom: 1px solid var(--border-subtle);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+            header {
+                padding: 48px 32px;
+                margin: -24px -24px 32px -24px;
+            }
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0,207,255,0.1), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(168,85,247,0.08), transparent);
+            pointer-events: none;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-mark {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-purple));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 0 30px var(--accent-glow);
+            flex-shrink: 0;
+        }
+
+        .system-tag {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--accent-primary);
+            background: var(--accent-glow);
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border-active);
+        }
+
+        h1 {
+            font-size: clamp(26px, 6vw, 48px);
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+            line-height: 1.5;
+        }
+
+        @media (min-width: 768px) {
+            .subtitle {
+                font-size: 13px;
+            }
+        }
+
+        .subtitle span {
+            color: var(--accent-primary);
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 16px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-success);
+            box-shadow: 0 0 10px var(--accent-success);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           CONTROLS SECTION - Glass Morphism Panel
+        ═══════════════════════════════════════════════════════════════ */
+        .controls-section {
+            background: var(--bg-surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+            .controls-section {
+                padding: 28px;
+            }
+        }
+
+        .controls-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+            opacity: 0.5;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .section-header h2 {
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .section-header .badge {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--accent-primary);
+            background: var(--accent-glow);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 480px) {
+            .controls-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 768px) {
+            .controls-grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 20px;
+            }
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-tertiary);
+            margin-bottom: 8px;
+        }
+
+        select, input[type="text"], textarea {
+            padding: 12px 14px;
+            background: var(--bg-deep);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            font-family: var(--font-display);
+            font-size: 14px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='rgba(255,255,255,0.4)' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        select:hover, input:hover, textarea:hover {
+            border-color: var(--border-active);
+            background-color: var(--bg-elevated);
+        }
+
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--text-secondary);
+            padding: 8px 12px;
+            background: var(--bg-deep);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .checkbox-item:hover {
+            border-color: var(--border-active);
+            color: var(--text-primary);
+        }
+
+        .checkbox-item:has(input:checked) {
+            background: var(--accent-glow);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent-primary);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-family: var(--font-display);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), #0099cc);
+            color: #000;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            flex: 1;
+            min-width: 140px;
+        }
+
+        @media (min-width: 480px) {
+            .btn-primary {
+                flex: none;
+            }
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px var(--accent-glow);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-subtle);
+            flex: 1;
+            min-width: 120px;
+        }
+
+        @media (min-width: 480px) {
+            .btn-secondary {
+                flex: none;
+            }
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border-color: var(--border-active);
+        }
+
+        .btn-small {
+            padding: 8px 14px;
+            font-size: 12px;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--accent-success), #00cc6a);
+            color: #000;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--accent-warning), #ff9500);
+            color: #000;
+        }
+
+        .btn-danger {
+            background: var(--bg-elevated);
+            color: var(--accent-danger);
+            border: 1px solid rgba(255,68,102,0.3);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           TABS - Command Navigation
+        ═══════════════════════════════════════════════════════════════ */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-surface);
+            padding: 6px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-subtle);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-button {
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @media (min-width: 768px) {
+            .tab-button {
+                padding: 14px 20px;
+                font-size: 13px;
+            }
+        }
+
+        .tab-button:hover {
+            color: var(--text-primary);
+            background: var(--bg-elevated);
+        }
+
+        .tab-button.active {
+            background: var(--accent-glow);
+            color: var(--accent-primary);
+            box-shadow: inset 0 0 0 1px var(--border-active);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           RESULTS HEADER
+        ═══════════════════════════════════════════════════════════════ */
+        .results-header {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .results-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .results-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .results-count {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-tertiary);
+            background: var(--bg-surface);
+            padding: 5px 10px;
+            border-radius: 6px;
+        }
+
+        .sort-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .sort-controls label {
+            margin-bottom: 0;
+            color: var(--text-secondary);
+            display: none;
+        }
+
+        @media (min-width: 480px) {
+            .sort-controls label {
+                display: block;
+            }
+        }
+
+        .sort-controls select {
+            min-width: 160px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           FLIGHT CARDS - The Core UI
+        ═══════════════════════════════════════════════════════════════ */
+        .flights-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .flight-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+            .flight-card {
+                padding: 24px;
+            }
+        }
+
+        .flight-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-purple));
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .flight-card:hover {
+            border-color: var(--border-active);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 40px rgba(0,207,255,0.08);
+        }
+
+        .flight-card:hover::before {
+            opacity: 1;
+        }
+
+        .flight-header {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        @media (min-width: 480px) {
+            .flight-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: flex-start;
+            }
+        }
+
+        .airline-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .airline-badge {
+            background: var(--bg-elevated);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .airport-code {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-tertiary);
+            background: var(--bg-deep);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .price-badge {
+            background: linear-gradient(135deg, var(--accent-success), #00cc6a);
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 16px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,255,136,0.2);
+            align-self: flex-start;
+        }
+
+        .price-badge.expensive {
+            background: linear-gradient(135deg, var(--accent-warning), #ff9500);
+        }
+
+        .price-badge.premium {
+            background: linear-gradient(135deg, var(--accent-purple), #8b5cf6);
+            color: #fff;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .tag {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .tag.nonstop {
+            background: rgba(0,255,136,0.15);
+            color: var(--accent-success);
+            border: 1px solid rgba(0,255,136,0.3);
+        }
+
+        .tag.recommended {
+            background: rgba(255,170,0,0.15);
+            color: var(--accent-warning);
+            border: 1px solid rgba(255,170,0,0.3);
+        }
+
+        .tag.economy {
+            background: rgba(0,207,255,0.1);
+            color: var(--accent-primary);
+            border: 1px solid rgba(0,207,255,0.2);
+        }
+
+        .tag.business {
+            background: rgba(168,85,247,0.15);
+            color: var(--accent-purple);
+            border: 1px solid rgba(168,85,247,0.3);
+        }
+
+        .tag.wildcard {
+            background: rgba(255,68,102,0.15);
+            color: var(--accent-danger);
+            border: 1px solid rgba(255,68,102,0.3);
+        }
+
+        .flight-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: var(--bg-deep);
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        @media (min-width: 768px) {
+            .flight-details {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 20px;
+                padding: 20px;
+            }
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-label {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        @media (min-width: 768px) {
+            .detail-value {
+                font-size: 16px;
+            }
+        }
+
+        .flight-footer {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        @media (min-width: 480px) {
+            .flight-footer {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .comfort-score {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stars {
+            color: var(--accent-warning);
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+
+        .comfort-label {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+        }
+
+        .btn-book {
+            background: linear-gradient(135deg, var(--accent-primary), #0099cc);
+            color: #000;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            width: 100%;
+        }
+
+        @media (min-width: 480px) {
+            .btn-book {
+                width: auto;
+            }
+        }
+
+        .btn-book:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px var(--accent-glow);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           SPECIAL SECTIONS
+        ═══════════════════════════════════════════════════════════════ */
+        .info-section {
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            border: 1px solid;
+        }
+
+        @media (min-width: 768px) {
+            .info-section {
+                padding: 24px;
+            }
+        }
+
+        .info-section.recommendations {
+            background: linear-gradient(135deg, rgba(255,170,0,0.08), rgba(255,170,0,0.02));
+            border-color: rgba(255,170,0,0.2);
+        }
+
+        .info-section.recommendations h3 {
+            color: var(--accent-warning);
+        }
+
+        .info-section.wildcards {
+            background: linear-gradient(135deg, rgba(168,85,247,0.08), rgba(168,85,247,0.02));
+            border-color: rgba(168,85,247,0.2);
+        }
+
+        .info-section.wildcards h3 {
+            color: var(--accent-purple);
+        }
+
+        .info-section h3 {
+            font-size: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-section p {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           CSV TABLES
+        ═══════════════════════════════════════════════════════════════ */
+        .csv-download {
+            background: var(--bg-surface);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        @media (min-width: 768px) {
+            .csv-download {
+                padding: 28px;
+            }
+        }
+
+        .csv-download h3 {
+            font-size: 15px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+            margin-bottom: 24px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .csv-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            min-width: 600px;
+        }
+
+        .csv-table th {
+            background: var(--bg-elevated);
+            padding: 14px 12px;
+            text-align: left;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-tertiary);
+            border-bottom: 1px solid var(--border-subtle);
+            white-space: nowrap;
+        }
+
+        .csv-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+        }
+
+        .csv-table tr:hover td {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+
+        .csv-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .csv-table a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .csv-table a:hover {
+            text-decoration: underline;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           NOTES HUB
+        ═══════════════════════════════════════════════════════════════ */
+        .notes-container {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .notes-container {
+                padding: 28px;
+            }
+        }
+
+        .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .notes-header h3 {
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notes-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .note-input-area {
+            margin-bottom: 20px;
+        }
+
+        .note-input-area textarea {
+            width: 100%;
+            min-height: 120px;
+            resize: vertical;
+            font-family: var(--font-display);
+            line-height: 1.6;
+        }
+
+        .note-input-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .char-count {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .note-card {
+            background: var(--bg-deep);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .note-card:hover {
+            border-color: var(--border-active);
+        }
+
+        .note-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            gap: 12px;
+        }
+
+        .note-timestamp {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+        }
+
+        .note-card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .note-card-actions button {
+            padding: 4px 8px;
+            font-size: 11px;
+            background: transparent;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+        }
+
+        .note-card-actions button:hover {
+            border-color: var(--border-active);
+            color: var(--text-primary);
+        }
+
+        .note-content {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .empty-notes {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-tertiary);
+        }
+
+        .empty-notes-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           DOCUMENT VAULT
+        ═══════════════════════════════════════════════════════════════ */
+        .vault-container {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .vault-container {
+                padding: 28px;
+            }
+        }
+
+        .vault-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .vault-header h3 {
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vault-categories {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .category-pill {
+            padding: 8px 16px;
+            background: var(--bg-deep);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .category-pill:hover,
+        .category-pill.active {
+            background: var(--accent-glow);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .vault-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        @media (min-width: 480px) {
+            .vault-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 768px) {
+            .vault-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .vault-item {
+            background: var(--bg-deep);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .vault-item:hover {
+            border-color: var(--border-active);
+            transform: translateY(-2px);
+        }
+
+        .vault-item-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .vault-item-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .vault-item-meta {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+        }
+
+        .vault-item-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-top: 8px;
+        }
+
+        .vault-item-status.pending {
+            background: rgba(255,170,0,0.15);
+            color: var(--accent-warning);
+        }
+
+        .vault-item-status.complete {
+            background: rgba(0,255,136,0.15);
+            color: var(--accent-success);
+        }
+
+        .vault-item-status.missing {
+            background: rgba(255,68,102,0.15);
+            color: var(--accent-danger);
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--border-subtle);
+            border-radius: 12px;
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 20px;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--accent-primary);
+            background: var(--accent-glow);
+        }
+
+        .upload-zone-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .upload-zone-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .upload-zone-hint {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 8px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           EMPTY STATE
+        ═══════════════════════════════════════════════════════════════ */
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            background: var(--bg-surface);
+            border-radius: 16px;
+            border: 1px dashed var(--border-subtle);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            filter: grayscale(0.5);
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           FOOTER
+        ═══════════════════════════════════════════════════════════════ */
+        footer {
+            margin-top: 40px;
+            padding: 24px 0;
+            border-top: 1px solid var(--border-subtle);
+            text-align: center;
+        }
+
+        .footer-brand {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-tertiary);
+            letter-spacing: 1px;
+        }
+
+        .footer-brand span {
+            color: var(--accent-primary);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           MODAL
+        ═══════════════════════════════════════════════════════════════ */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 100;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .modal-header h3 {
+            font-size: 16px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding: 20px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           UTILITIES
+        ═══════════════════════════════════════════════════════════════ */
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Ambient glow effects -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
+    <div class="container">
+        <!-- ═══════════════════════════════════════════════════════════════
+             HEADER
+        ═══════════════════════════════════════════════════════════════ -->
+        <header>
+            <div class="header-content">
+                <div class="logo-mark">
+                    <div class="logo-icon">🪐</div>
+                    <span class="system-tag">TRAVELING OS v1.1</span>
+                </div>
+                <h1>Flight Command Center</h1>
+                <p class="subtitle"><span>ONE WAY</span> | <span>FLL/MIA</span> → <span>Mérida (MID)</span> | Jan 14-18, 2026</p>
+                
+                <div class="status-bar">
+                    <div class="status-item">
+                        <div class="status-dot"></div>
+                        <span>System Online</span>
+                    </div>
+                    <div class="status-item">
+                        <span>🛫 18 Flights Indexed</span>
+                    </div>
+                    <div class="status-item">
+                        <span>⏱️ Updated: Jan 11, 2026</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             FILTERS SECTION
+        ═══════════════════════════════════════════════════════════════ -->
+        <div class="controls-section">
+            <div class="section-header">
+                <h2>🔍 Search & Filter</h2>
+                <span class="badge">Command Interface</span>
+            </div>
+            
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label>Trip Type</label>
+                    <select id="tripType">
+                        <option value="oneway" selected>✈️ One Way</option>
+                        <option value="roundtrip" disabled>↔️ Round Trip (Coming Soon)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Departure Date</label>
+                    <select id="dateFilter">
+                        <option value="">All Dates</option>
+                        <option value="Tuesday">Tuesday, Jan 14</option>
+                        <option value="Wednesday">Wednesday, Jan 15</option>
+                        <option value="Thursday">Thursday, Jan 16</option>
+                        <option value="Friday">Friday, Jan 17</option>
+                        <option value="Saturday">Saturday, Jan 18</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Price Range</label>
+                    <select id="priceFilter">
+                        <option value="">All Prices</option>
+                        <option value="budget">$300-500</option>
+                        <option value="standard">$500-700</option>
+                        <option value="premium">$700+</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Cabin Class</label>
+                    <select id="classFilter">
+                        <option value="">All Classes</option>
+                        <option value="Economy">Economy</option>
+                        <option value="Business">Business</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Departure Airport</label>
+                    <select id="airportFilter">
+                        <option value="">All Airports</option>
+                        <option value="FLL">Fort Lauderdale (FLL)</option>
+                        <option value="MIA">Miami (MIA)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-group" style="margin-bottom: 16px;">
+                <label>Airlines</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="American Airlines" class="airline-checkbox"> American
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="Aeromexico" class="airline-checkbox"> Aeromexico
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="United" class="airline-checkbox"> United
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="Delta" class="airline-checkbox"> Delta
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="Viva Aerobus" class="airline-checkbox"> Viva Aerobus
+                    </label>
+                </div>
+            </div>
+
+            <div class="control-group" style="margin-bottom: 20px;">
+                <label>Stops</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="nonstop" class="stops-checkbox" checked> Nonstop Only
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="1stop" class="stops-checkbox"> Allow 1 Stop
+                    </label>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="applyFilters()">
+                    <span>⚡</span> Apply Filters
+                </button>
+                <button class="btn-secondary" onclick="resetFilters()">
+                    <span>↺</span> Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             TABS
+        ═══════════════════════════════════════════════════════════════ -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('all')">🛫 Flights</button>
+            <button class="tab-button" onclick="switchTab('recommendations')">⭐ Top 5</button>
+            <button class="tab-button" onclick="switchTab('wildcards')">🔥 Wildcards</button>
+            <button class="tab-button" onclick="switchTab('notes')">📝 Notes</button>
+            <button class="tab-button" onclick="switchTab('vault')">📁 Vault</button>
+            <button class="tab-button" onclick="switchTab('csv')">📊 CSV</button>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             ALL FLIGHTS TAB
+        ═══════════════════════════════════════════════════════════════ -->
+        <div id="all" class="tab-content active">
+            <div class="results-header">
+                <h2>All Flights <span class="results-count" id="flightCount">18 flights</span></h2>
+                <div class="sort-controls">
+                    <label>Sort:</label>
+                    <select id="sortSelect" onchange="sortFlights(this.value)">
+                        <option value="price-asc">Price ↑</option>
+                        <option value="price-desc">Price ↓</option>
+                        <option value="comfort">Comfort</option>
+                        <option value="date">Date</option>
+                        <option value="timing">Timing</option>
+                    </select>
+                </div>
+            </div>
+            <div id="allFlightsContainer" class="flights-grid"></div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             RECOMMENDATIONS TAB
+        ═══════════════════════════════════════════════════════════════ -->
+        <div id="recommendations" class="tab-content">
+            <h2 style="margin-bottom: 20px;">⭐ Top 5 Recommendations</h2>
+            <div class="info-section recommendations">
+                <h3>⚡ Why These Flights?</h3>
+                <p>Selected based on optimal balance of price, comfort, timing, and overall value. Prioritizing nonstop routes with strong airline reliability.</p>
+            </div>
+            <div id="recommendationsContainer" class="flights-grid"></div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             WILDCARDS TAB
+        ═══════════════════════════════════════════════════════════════ -->
+        <div id="wildcards" class="tab-content">
+            <h2 style="margin-bottom: 20px;">🔥 Wildcard Deals</h2>
+            <div class="info-section wildcards">
+                <h3>💎 Hidden Gems</h3>
+                <p>Flights outside your original criteria offering exceptional value or superior comfort. Consider if you're flexible!</p>
+            </div>
+            <div id="wildcardsContainer" class="flights-grid"></div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             NOTES TAB
+        ═══════════════════════════════════════════════════════════════ -->
+        <div id="notes" class="tab-content">
+            <div class="notes-container">
+                <div class="notes-header">
+                    <h3>📝 Travel Notes Hub</h3>
+                    <div class="notes-actions">
+                        <button class="btn-secondary btn-small" onclick="exportNotes()">⬇️ Export</button>
+                        <button class="btn-secondary btn-small" onclick="clearAllNotes()">🗑️ Clear All</button>
+                    </div>
+                </div>
+
+                <div class="note-input-area">
+                    <textarea id="noteInput" placeholder="Write your travel notes, flight comparisons, itinerary ideas, packing lists, or any thoughts here..."></textarea>
+                    <div class="note-input-footer">
+                        <span class="char-count"><span id="charCount">0</span> characters</span>
+                        <button class="btn-primary btn-small" onclick="saveNote()">💾 Save Note</button>
+                    </div>
+                </div>
+
+                <div id="notesList" class="notes-list"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             VAULT TAB
+        ═══════════════════════════════════════════════════════════════ -->
+        <div id="vault" class="tab-content">
+            <div class="vault-container">
+                <div class="vault-header">
+                    <h3>📁 Document Vault</h3>
+                    <button class="btn-primary btn-small" onclick="showUploadModal()">+ Add Document</button>
+                </div>
+
+                <div class="vault-categories">
+                    <span class="category-pill active" onclick="filterVault('all')">All</span>
+                    <span class="category-pill" onclick="filterVault('visa')">🛂 Visa</span>
+                    <span class="category-pill" onclick="filterVault('passport')">📘 Passport</span>
+                    <span class="category-pill" onclick="filterVault('booking')">🎫 Bookings</span>
+                    <span class="category-pill" onclick="filterVault('insurance')">🏥 Insurance</span>
+                    <span class="category-pill" onclick="filterVault('other')">📄 Other</span>
+                </div>
+
+                <div id="vaultGrid" class="vault-grid"></div>
+
+                <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-zone-icon">📤</div>
+                    <div class="upload-zone-text">Drop files here or click to upload</div>
+                    <div class="upload-zone-hint">PDF, JPG, PNG up to 10MB</div>
+                    <input type="file" id="fileInput" class="visually-hidden" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFileUpload(event)">
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             CSV TAB
+        ═══════════════════════════════════════════════════════════════ -->
+        <div id="csv" class="tab-content">
+            <h2 style="margin-bottom: 20px;">📊 CSV Data Export</h2>
+            <div class="csv-download">
+                <h3>🏢 Airlines Summary</h3>
+                <div class="table-wrapper">
+                    <table class="csv-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Airline</th>
+                                <th>Avg Price</th>
+                                <th>Reliability</th>
+                                <th>Comfort</th>
+                                <th>Link</th>
+                            </tr>
+                        </thead>
+                        <tbody id="csvAirlinesTable"></tbody>
+                    </table>
+                </div>
+
+                <h3 style="margin-top: 28px;">✈️ All Flights</h3>
+                <div class="table-wrapper">
+                    <table class="csv-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Airline</th>
+                                <th>Depart</th>
+                                <th>Arrive</th>
+                                <th>Class</th>
+                                <th>Price</th>
+                                <th>Stops</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="csvFlightsTable"></tbody>
+                    </table>
+                </div>
+
+                <div class="button-group" style="margin-top: 20px;">
+                    <button class="btn-primary" onclick="downloadCSV()">⬇️ Download CSV</button>
+                    <button class="btn-secondary" onclick="copyCSV()">📋 Copy to Clipboard</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             FOOTER
+        ═══════════════════════════════════════════════════════════════ -->
+        <footer>
+            <p class="footer-brand">🪐 <span>TRAVELING OS</span> v1.1 | Built by <span>SMFAM</span> | <a href="https://github.com/gabosaturno11/traveling-os" target="_blank" style="color: var(--accent-primary);">GitHub</a></p>
+        </footer>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         UPLOAD MODAL
+    ═══════════════════════════════════════════════════════════════ -->
+    <div id="uploadModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Add Document</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="control-group" style="margin-bottom: 16px;">
+                    <label>Document Name</label>
+                    <input type="text" id="docName" placeholder="e.g., Passport Scan">
+                </div>
+                <div class="control-group" style="margin-bottom: 16px;">
+                    <label>Category</label>
+                    <select id="docCategory">
+                        <option value="visa">🛂 Visa</option>
+                        <option value="passport">📘 Passport</option>
+                        <option value="booking">🎫 Booking</option>
+                        <option value="insurance">🏥 Insurance</option>
+                        <option value="other">📄 Other</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Status</label>
+                    <select id="docStatus">
+                        <option value="complete">✅ Complete</option>
+                        <option value="pending">⏳ Pending</option>
+                        <option value="missing">❌ Missing</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" onclick="addDocument()">Add Document</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        // FLIGHT DATA
+        // ═══════════════════════════════════════════════════════════════
+        const flightData = [
+            {date: 'Tuesday', dateSort: 1, time: '7:45 AM', arrival: '9:30 AM', airline: 'American Airlines', price: 389, class: 'Economy', stops: 'Nonstop', comfort: 4.5, duration: '1h 45m', airport: 'MIA', link: 'https://www.aa.com', recommended: true},
+            {date: 'Tuesday', dateSort: 1, time: '2:30 PM', arrival: '4:15 PM', airline: 'Viva Aerobus', price: 345, class: 'Economy', stops: 'Nonstop', comfort: 3.8, duration: '1h 45m', airport: 'MIA', link: 'https://www.vivaaerobus.com', recommended: true},
+            {date: 'Tuesday', dateSort: 1, time: '6:00 AM', arrival: '7:45 AM', airline: 'Aeromexico', price: 425, class: 'Business', stops: 'Nonstop', comfort: 4.8, duration: '1h 45m', airport: 'FLL', link: 'https://www.aeromexico.com'},
+            {date: 'Wednesday', dateSort: 2, time: '8:15 AM', arrival: '10:00 AM', airline: 'United', price: 475, class: 'Economy', stops: 'Nonstop', comfort: 4.2, duration: '1h 45m', airport: 'MIA', link: 'https://www.united.com'},
+            {date: 'Wednesday', dateSort: 2, time: '11:30 AM', arrival: '1:15 PM', airline: 'American Airlines', price: 405, class: 'Economy', stops: 'Nonstop', comfort: 4.5, duration: '1h 45m', airport: 'FLL', link: 'https://www.aa.com', recommended: true},
+            {date: 'Wednesday', dateSort: 2, time: '3:45 PM', arrival: '5:30 PM', airline: 'Delta', price: 520, class: 'Business', stops: 'Nonstop', comfort: 4.7, duration: '1h 45m', airport: 'MIA', link: 'https://www.delta.com'},
+            {date: 'Wednesday', dateSort: 2, time: '5:15 PM', arrival: '11:50 PM', airline: 'Viva Aerobus', price: 318, class: 'Economy', stops: '1 Stop', comfort: 3.2, duration: '5h 35m', airport: 'FLL', link: 'https://www.vivaaerobus.com'},
+            {date: 'Thursday', dateSort: 3, time: '7:00 AM', arrival: '8:45 AM', airline: 'Aeromexico', price: 450, class: 'Economy', stops: 'Nonstop', comfort: 4.4, duration: '1h 45m', airport: 'MIA', link: 'https://www.aeromexico.com', recommended: true},
+            {date: 'Thursday', dateSort: 3, time: '9:30 AM', arrival: '11:15 AM', airline: 'American Airlines', price: 395, class: 'Economy', stops: 'Nonstop', comfort: 4.5, duration: '1h 45m', airport: 'FLL', link: 'https://www.aa.com', recommended: true},
+            {date: 'Thursday', dateSort: 3, time: '1:00 PM', arrival: '2:45 PM', airline: 'United', price: 495, class: 'Economy', stops: 'Nonstop', comfort: 4.1, duration: '1h 45m', airport: 'MIA', link: 'https://www.united.com'},
+            {date: 'Thursday', dateSort: 3, time: '4:30 PM', arrival: '6:15 PM', airline: 'Viva Aerobus', price: 355, class: 'Economy', stops: 'Nonstop', comfort: 3.7, duration: '1h 45m', airport: 'MIA', link: 'https://www.vivaaerobus.com'},
+            {date: 'Friday', dateSort: 4, time: '6:30 AM', arrival: '8:15 AM', airline: 'Delta', price: 485, class: 'Economy', stops: 'Nonstop', comfort: 4.3, duration: '1h 45m', airport: 'FLL', link: 'https://www.delta.com'},
+            {date: 'Friday', dateSort: 4, time: '10:00 AM', arrival: '11:45 AM', airline: 'American Airlines', price: 415, class: 'Economy', stops: 'Nonstop', comfort: 4.5, duration: '1h 45m', airport: 'MIA', link: 'https://www.aa.com'},
+            {date: 'Friday', dateSort: 4, time: '2:15 PM', arrival: '4:00 PM', airline: 'Aeromexico', price: 460, class: 'Business', stops: 'Nonstop', comfort: 4.8, duration: '1h 45m', airport: 'FLL', link: 'https://www.aeromexico.com', recommended: true},
+            {date: 'Saturday', dateSort: 5, time: '3:00 AM', arrival: '4:45 AM', airline: 'Viva Aerobus', price: 298, class: 'Economy', stops: 'Nonstop', comfort: 3.5, duration: '1h 45m', airport: 'MIA', link: 'https://www.vivaaerobus.com', wildcard: true},
+            {date: 'Saturday', dateSort: 5, time: '5:00 PM', arrival: '6:45 PM', airline: 'United', price: 625, class: 'Business', stops: 'Nonstop', comfort: 4.9, duration: '1h 45m', airport: 'FLL', link: 'https://www.united.com', wildcard: true},
+        ];
+
+        const airlineInfo = [
+            {name: 'American Airlines', avgPrice: 405, reliability: 4.6, comfort: 4.5, website: 'aa.com'},
+            {name: 'Aeromexico', avgPrice: 445, reliability: 4.4, comfort: 4.6, website: 'aeromexico.com'},
+            {name: 'United', avgPrice: 465, reliability: 4.3, comfort: 4.2, website: 'united.com'},
+            {name: 'Delta', avgPrice: 502, reliability: 4.5, comfort: 4.5, website: 'delta.com'},
+            {name: 'Viva Aerobus', avgPrice: 329, reliability: 3.8, comfort: 3.7, website: 'vivaaerobus.com'},
+        ];
+
+        let filteredFlights = [...flightData];
+        let notes = JSON.parse(localStorage.getItem('travelingOS_notes') || '[]');
+        let documents = JSON.parse(localStorage.getItem('travelingOS_docs') || '[]');
+
+        // Initialize default documents if empty
+        if (documents.length === 0) {
+            documents = [
+                {id: 1, name: 'Passport', category: 'passport', status: 'complete', date: new Date().toISOString()},
+                {id: 2, name: 'Mexico Visa', category: 'visa', status: 'pending', date: new Date().toISOString()},
+                {id: 3, name: 'Travel Insurance', category: 'insurance', status: 'missing', date: new Date().toISOString()},
+                {id: 4, name: 'Flight Booking', category: 'booking', status: 'pending', date: new Date().toISOString()},
+            ];
+            localStorage.setItem('travelingOS_docs', JSON.stringify(documents));
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // FLIGHT CARD
+        // ═══════════════════════════════════════════════════════════════
+        function createFlightCard(flight) {
+            const isBusiness = flight.class === 'Business';
+            const isPriceHigh = flight.price > 500;
+            let priceClass = isPriceHigh ? 'expensive' : '';
+            if (isBusiness && flight.price > 550) priceClass = 'premium';
+
+            return `
+                <div class="flight-card">
+                    <div class="flight-header">
+                        <div class="airline-info">
+                            <div class="airline-badge">${flight.airline}</div>
+                            <span class="airport-code">${flight.airport}</span>
+                        </div>
+                        <div class="price-badge ${priceClass}">$${flight.price}</div>
+                    </div>
+                    <div class="tags">
+                        ${flight.stops === 'Nonstop' ? '<span class="tag nonstop">✓ NONSTOP</span>' : '<span class="tag">1 STOP</span>'}
+                        ${flight.recommended ? '<span class="tag recommended">⭐ PICK</span>' : ''}
+                        <span class="tag ${isBusiness ? 'business' : 'economy'}">${flight.class}</span>
+                        ${flight.wildcard ? '<span class="tag wildcard">🔥 WILD</span>' : ''}
+                    </div>
+                    <div class="flight-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Depart</span>
+                            <span class="detail-value">${flight.time}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Arrive</span>
+                            <span class="detail-value">${flight.arrival}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Duration</span>
+                            <span class="detail-value">${flight.duration}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Date</span>
+                            <span class="detail-value">${flight.date}</span>
+                        </div>
+                    </div>
+                    <div class="flight-footer">
+                        <div class="comfort-score">
+                            <span class="stars">${'★'.repeat(Math.floor(flight.comfort))}</span>
+                            <span class="comfort-label">${flight.comfort}</span>
+                        </div>
+                        <a href="${flight.link}" target="_blank" class="btn-book">Book →</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderFlights(flights, containerId) {
+            const container = document.getElementById(containerId);
+            if (flights.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">✈️</div><p>No flights match your criteria.</p></div>`;
+            } else {
+                container.innerHTML = flights.map(f => createFlightCard(f)).join('');
+            }
+            document.getElementById('flightCount').textContent = `${flights.length} flights`;
+        }
+
+        function applyFilters() {
+            const date = document.getElementById('dateFilter').value;
+            const price = document.getElementById('priceFilter').value;
+            const className = document.getElementById('classFilter').value;
+            const airport = document.getElementById('airportFilter').value;
+            const stopsChecked = Array.from(document.querySelectorAll('.stops-checkbox:checked')).map(e => e.value);
+            const airlinesChecked = Array.from(document.querySelectorAll('.airline-checkbox:checked')).map(e => e.value);
+
+            filteredFlights = flightData.filter(flight => {
+                if (date && flight.date !== date) return false;
+                if (className && flight.class !== className) return false;
+                if (airport && flight.airport !== airport) return false;
+                if (airlinesChecked.length > 0 && !airlinesChecked.includes(flight.airline)) return false;
+                const hasNonstop = stopsChecked.includes('nonstop');
+                const has1Stop = stopsChecked.includes('1stop');
+                if (stopsChecked.length > 0) {
+                    const isNonstop = flight.stops === 'Nonstop';
+                    if (!((hasNonstop && isNonstop) || (has1Stop && !isNonstop))) return false;
+                }
+                if (price === 'budget' && flight.price > 500) return false;
+                if (price === 'standard' && (flight.price <= 500 || flight.price > 700)) return false;
+                if (price === 'premium' && flight.price <= 700) return false;
+                return true;
+            });
+
+            renderFlights(filteredFlights, 'allFlightsContainer');
+        }
+
+        function resetFilters() {
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('priceFilter').value = '';
+            document.getElementById('classFilter').value = '';
+            document.getElementById('airportFilter').value = '';
+            document.querySelectorAll('.airline-checkbox').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.stops-checkbox').forEach(cb => cb.checked = cb.value === 'nonstop');
+            filteredFlights = [...flightData];
+            renderFlights(filteredFlights, 'allFlightsContainer');
+        }
+
+        function sortFlights(sortBy) {
+            let sorted = [...filteredFlights];
+            switch(sortBy) {
+                case 'price-asc': sorted.sort((a, b) => a.price - b.price); break;
+                case 'price-desc': sorted.sort((a, b) => b.price - a.price); break;
+                case 'comfort': sorted.sort((a, b) => b.comfort - a.comfort); break;
+                case 'date': sorted.sort((a, b) => a.dateSort - b.dateSort); break;
+                case 'timing':
+                    sorted.sort((a, b) => {
+                        const getHour = (t) => { const [h] = t.split(':'); let hr = parseInt(h); if (t.includes('PM') && hr !== 12) hr += 12; if (t.includes('AM') && hr === 12) hr = 0; return hr; };
+                        return getHour(a.time) - getHour(b.time);
+                    }); break;
+            }
+            renderFlights(sorted, 'allFlightsContainer');
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'recommendations') renderFlights(flightData.filter(f => f.recommended).slice(0, 5), 'recommendationsContainer');
+            else if (tabName === 'wildcards') renderFlights(flightData.filter(f => f.wildcard), 'wildcardsContainer');
+            else if (tabName === 'csv') renderCSV();
+            else if (tabName === 'notes') renderNotes();
+            else if (tabName === 'vault') renderVault();
+        }
+
+        function renderCSV() {
+            document.getElementById('csvAirlinesTable').innerHTML = airlineInfo.map((a, i) => `<tr><td>#${i+1}</td><td><strong>${a.name}</strong></td><td>$${a.avgPrice}</td><td>${a.reliability}/5</td><td>${a.comfort}/5</td><td><a href="https://${a.website}" target="_blank">→</a></td></tr>`).join('');
+            const sorted = [...flightData].sort((a, b) => a.price - b.price);
+            document.getElementById('csvFlightsTable').innerHTML = sorted.map(f => `<tr><td>${f.date}</td><td>${f.airline}</td><td>${f.time}</td><td>${f.arrival}</td><td>${f.class}</td><td><strong>$${f.price}</strong></td><td>${f.stops}</td><td>${f.comfort}</td></tr>`).join('');
+        }
+
+        function downloadCSV() {
+            let csv = 'Date,Airline,Departure,Arrival,Class,Price,Stops,Comfort,Airport,Link\n';
+            [...flightData].sort((a, b) => a.price - b.price).forEach(f => {
+                csv += `${f.date},${f.airline},${f.time},${f.arrival},${f.class},$${f.price},${f.stops},${f.comfort},${f.airport},${f.link}\n`;
+            });
+            const blob = new Blob([csv], {type: 'text/csv'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'traveling-os-flights.csv';
+            a.click();
+        }
+
+        function copyCSV() {
+            let csv = 'Date,Airline,Departure,Arrival,Class,Price,Stops,Comfort\n';
+            [...flightData].sort((a, b) => a.price - b.price).forEach(f => {
+                csv += `${f.date},${f.airline},${f.time},${f.arrival},${f.class},$${f.price},${f.stops},${f.comfort}\n`;
+            });
+            navigator.clipboard.writeText(csv).then(() => alert('CSV copied to clipboard!'));
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // NOTES
+        // ═══════════════════════════════════════════════════════════════
+        document.getElementById('noteInput').addEventListener('input', function() {
+            document.getElementById('charCount').textContent = this.value.length;
+        });
+
+        function saveNote() {
+            const input = document.getElementById('noteInput');
+            const content = input.value.trim();
+            if (!content) return;
+            notes.unshift({ id: Date.now(), content, date: new Date().toISOString() });
+            localStorage.setItem('travelingOS_notes', JSON.stringify(notes));
+            input.value = '';
+            document.getElementById('charCount').textContent = '0';
+            renderNotes();
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('notesList');
+            if (notes.length === 0) {
+                container.innerHTML = `<div class="empty-notes"><div class="empty-notes-icon">📝</div><p>No notes yet. Start writing!</p></div>`;
+                return;
+            }
+            container.innerHTML = notes.map(note => `
+                <div class="note-card">
+                    <div class="note-card-header">
+                        <span class="note-timestamp">${new Date(note.date).toLocaleString()}</span>
+                        <div class="note-card-actions">
+                            <button onclick="copyNote(${note.id})">📋</button>
+                            <button onclick="deleteNote(${note.id})">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="note-content">${note.content}</div>
+                </div>
+            `).join('');
+        }
+
+        function deleteNote(id) {
+            notes = notes.filter(n => n.id !== id);
+            localStorage.setItem('travelingOS_notes', JSON.stringify(notes));
+            renderNotes();
+        }
+
+        function copyNote(id) {
+            const note = notes.find(n => n.id === id);
+            if (note) navigator.clipboard.writeText(note.content).then(() => alert('Note copied!'));
+        }
+
+        function exportNotes() {
+            const text = notes.map(n => `[${new Date(n.date).toLocaleString()}]\n${n.content}\n`).join('\n---\n\n');
+            const blob = new Blob([text], {type: 'text/plain'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'traveling-os-notes.txt';
+            a.click();
+        }
+
+        function clearAllNotes() {
+            if (confirm('Delete all notes?')) {
+                notes = [];
+                localStorage.setItem('travelingOS_notes', JSON.stringify(notes));
+                renderNotes();
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // VAULT
+        // ═══════════════════════════════════════════════════════════════
+        const categoryIcons = { visa: '🛂', passport: '📘', booking: '🎫', insurance: '🏥', other: '📄' };
+
+        function renderVault(filter = 'all') {
+            const filtered = filter === 'all' ? documents : documents.filter(d => d.category === filter);
+            const container = document.getElementById('vaultGrid');
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;"><div class="empty-state-icon">📁</div><p>No documents in this category.</p></div>`;
+                return;
+            }
+            container.innerHTML = filtered.map(doc => `
+                <div class="vault-item" onclick="viewDocument(${doc.id})">
+                    <div class="vault-item-icon">${categoryIcons[doc.category] || '📄'}</div>
+                    <div class="vault-item-name">${doc.name}</div>
+                    <div class="vault-item-meta">${doc.category.toUpperCase()}</div>
+                    <span class="vault-item-status ${doc.status}">${doc.status === 'complete' ? '✅ Ready' : doc.status === 'pending' ? '⏳ Pending' : '❌ Missing'}</span>
+                </div>
+            `).join('');
+        }
+
+        function filterVault(category) {
+            document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+            event.target.classList.add('active');
+            renderVault(category);
+        }
+
+        function showUploadModal() {
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+        }
+
+        function addDocument() {
+            const name = document.getElementById('docName').value.trim();
+            const category = document.getElementById('docCategory').value;
+            const status = document.getElementById('docStatus').value;
+            if (!name) { alert('Please enter a document name'); return; }
+            documents.push({ id: Date.now(), name, category, status, date: new Date().toISOString() });
+            localStorage.setItem('travelingOS_docs', JSON.stringify(documents));
+            closeModal();
+            document.getElementById('docName').value = '';
+            renderVault();
+        }
+
+        function viewDocument(id) {
+            const doc = documents.find(d => d.id === id);
+            if (doc) alert(`Document: ${doc.name}\nCategory: ${doc.category}\nStatus: ${doc.status}`);
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('docName').value = file.name.replace(/\.[^/.]+$/, '');
+                showUploadModal();
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // INIT
+        // ═══════════════════════════════════════════════════════════════
+        renderFlights(filteredFlights, 'allFlightsContainer');
+        renderCSV();
+    </script>
+</body>
+</html>
